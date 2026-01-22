@@ -1,0 +1,44 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "build ApiGeneratorBymLua",
+				"type": "shell",
+				"command": "go build -o ${workspaceFolder}/bin/ApiGeneratorBymLua.exe ${workspaceFolder}/cmd",
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				},
+				"presentation": {
+					"reveal": "always",
+					"panel": "new",
+				}
+			}
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "lanuch ApiGeneratorBymLua",
+				"type": "go",
+				"request": "launch",
+				"mode": "auto",
+				"cwd": "${workspaceFolder}/cmd",
+				"program": "${workspaceFolder}/cmd",
+				"console": "integratedTerminal",
+				"output": "${workspaceFolder}/bin/ApiGeneratorBymLua_debug.exe",
+				"env": {},
+				"args": []
+			},
+		],
+		"compounds": []
+	},
+	"settings": {}
+}

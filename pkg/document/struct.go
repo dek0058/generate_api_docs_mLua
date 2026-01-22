@@ -1,0 +1,21 @@
+package document
+
+type PropertyDoc struct {
+	Name, Type, Description, DefaultValue, ExecSpace string
+}
+type ParamInfo struct {
+	Name, Type, Description string // 설명 필드 추가
+}
+type MethodDoc struct {
+	Name, ReturnType, Description, ExecSpace string
+	Params                                   []ParamInfo
+}
+type HandlerDoc struct {
+	Name, EventType, EventVar, Description, ExecSpace, EventSender string
+	Params                                                         []ParamInfo // 핸들러도 파라미터를 가질 수 있으므로 추가
+}
+type Documentation struct {
+	Properties []PropertyDoc
+	Methods    []MethodDoc
+	Handlers   []HandlerDoc
+}
