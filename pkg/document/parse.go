@@ -57,9 +57,10 @@ func parseSignatureParams(paramStr string) []ParamInfo {
 		}
 		
 		// Split by whitespace to separate type and name
+		// Expected format: "type name" (e.g., "string playerName")
 		fields := strings.Fields(part)
 		if len(fields) >= 2 {
-			// First field is type, second is name
+			// First field is type, second is name (ignore any additional fields)
 			params = append(params, ParamInfo{
 				Type: fields[0],
 				Name: fields[1],
