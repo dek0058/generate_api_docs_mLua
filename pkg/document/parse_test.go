@@ -179,3 +179,38 @@ handler void OnPlayerUpdate(string playerName, number health)`
 		t.Errorf("Param[0].Type = %v, want string", handler.Params[0].Type)
 	}
 }
+
+func TestHandlerSignatureParameters(t *testing.T) {
+	input := `@Logic
+---@description "Test handler with signature params only"
+handler MyHandler(string message, number code)`
+
+	doc, err := Parse(input)
+	if err != nil {
+		t.Fatalf("Parse() error = %v", err)
+	}
+
+	if len(doc.Handlers) == 0 {
+		t.Fatalf("Expected at least one handler, got none")
+	}
+
+	handler := doc.Handlers[0]
+	if handler.Name != "MyHandler" {
+		t.Errorf("Name = %v, want MyHandler", handler.Name)
+	}
+	if len(handler.Params) != 2 {
+		t.Fatalf("Expected 2 parameters, got %d", len(handler.Params))
+	}
+	if handler.Params[0].Type != "string" {
+		t.Errorf("Param[0].Type = %v, want string", handler.Params[0].Type)
+	}
+	if handler.Params[0].Name != "message" {
+		t.Errorf("Param[0].Name = %v, want message", handler.Params[0].Name)
+	}
+	if handler.Params[1].Type != "number" {
+		t.Errorf("Param[1].Type = %v, want number", handler.Params[1].Type)
+	}
+	if handler.Params[1].Name != "code" {
+		t.Errorf("Param[1].Name = %v, want code", handler.Params[1].Name)
+	}
+}

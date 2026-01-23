@@ -82,8 +82,11 @@ func renderFunctionDoc(name, returnType, desc, execSpace string, params []docume
 
 	if len(params) > 0 {
 		for _, p := range params {
-			linkedType := createLinkForType(p.Type, typeLinks)
-			bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px;">%s</code><span style="color: #57606a;"> &nbsp;|&nbsp; <code>%s</code> | %s</span></td></tr>`, p.Name, linkedType, p.Description)
+			// Only show parameter details if there's a description
+			if p.Description != "" {
+				linkedType := createLinkForType(p.Type, typeLinks)
+				bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px;">%s</code><span style="color: #57606a;"> &nbsp;|&nbsp; <code>%s</code> | %s</span></td></tr>`, p.Name, linkedType, p.Description)
+			}
 		}
 	}
 
@@ -128,8 +131,11 @@ func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
 	// Parameters
 	if len(h.Params) > 0 {
 		for _, p := range h.Params {
-			linkedType := createLinkForType(p.Type, typeLinks)
-			bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px;">%s</code><span style="color: #57606a;"> &nbsp;|&nbsp; <code>%s</code> | %s</span></td></tr>`, p.Name, linkedType, p.Description)
+			// Only show parameter details if there's a description
+			if p.Description != "" {
+				linkedType := createLinkForType(p.Type, typeLinks)
+				bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px;">%s</code><span style="color: #57606a;"> &nbsp;|&nbsp; <code>%s</code> | %s</span></td></tr>`, p.Name, linkedType, p.Description)
+			}
 		}
 	}
 

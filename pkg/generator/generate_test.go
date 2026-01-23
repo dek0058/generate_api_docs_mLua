@@ -130,7 +130,15 @@ func TestRenderHandlerDocWithReturnType(t *testing.T) {
 		t.Error("Expected return type 'void' not found in output")
 	}
 
-	// Check if parameters are rendered
+	// Check if parameters are rendered in the title
+	if !strings.Contains(html, "string player") {
+		t.Error("Expected parameter 'string player' not found in title")
+	}
+	if !strings.Contains(html, "number health") {
+		t.Error("Expected parameter 'number health' not found in title")
+	}
+	
+	// Check if parameters are rendered in the body
 	if !strings.Contains(html, "player") {
 		t.Error("Expected parameter 'player' not found in output")
 	}
