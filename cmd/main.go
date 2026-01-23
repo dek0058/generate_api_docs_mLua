@@ -3,53 +3,103 @@ package main
 import (
 	"fmt"
 	"generate_api_docs_mLua/pkg/document"
+	"generate_api_docs_mLua/pkg/generator"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 func main() {
-	testContent := `
----@description "서버 상태: 초기화 중"
-property string State_Initializing = "Initializing"
+	rootDir := "RootDesk/MyDesk"
+	outputDir := "document/api"
 
----@description "서버의 현재 상태를 클라이언트에 전송합니다."
----@param string uid 요청한 유저의 고유 ID.
----@param bool force 강제로 상태를 다시 보낼지 여부.
-@ExecSpace("Server")
-method void FetchServerState(string uid, bool force)
-    -- body
-end
-
----@description "유저 퇴장 이벤트를 처리합니다. 핸들러도 파라미터를 가질 수 있습니다."
----@param UserLeaveEvent e 퇴장한 유저의 이벤트 객체.
-@ExecSpace("ServerOnly")
-@EventSender("Service", "UserService")
-handler HandleUserLeaveEvent(UserLeaveEvent e)
-    -- body
-end
-`
-	docs, err := document.Parse(testContent)
+	// 1. 모든 mlua 파일을 찾고 파싱 준비
+	filesToParse, err := findLuaFiles(rootDir)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		fmt.Printf("파일 검색 중 오류 발생: %v\n", err)
 		return
 	}
 
-	fmt.Println("--- Properties ---")
-	for _, p := range docs.Properties {
-		fmt.Printf("  - Name: %s, Desc: %q\n", p.Name, p.Description)
-	}
+	// 2. 모든 파일을 파싱하여 문서 정보와 타입-파일 경로 맵 생성
+	docs := make(map[string]*document.Documentation)
+	typeLinks := make(generator.TypeLinkInfo)
 
-	fmt.Println("\n--- Methods ---")
-	for _, m := range docs.Methods {
-		fmt.Printf("  - Name: %s, Desc: %q\n", m.Name, m.Description)
-		for _, p := range m.Params {
-			fmt.Printf("    - Param: %s (%s) - %s\n", p.Name, p.Type, p.Description)
+	for _, file := range filesToParse {
+		doc, err := document.ParseFile(file)
+		if err != nil {
+			fmt.Printf("파일 파싱 오류 %s: %v\n", file, err)
+			continue
+		}
+
+		baseName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))
+		docs[file] = doc
+
+		// 타입과 문서 파일 경로를 매핑. e.g., "Channel" -> "./../struct/Channel.md"
+		// DocType이 Event, Struct 등일 경우, 해당 파일이 정의하는 타입 이름은 파일 이름과 같다고 가정.
+		if doc.DocType == "Event" || doc.DocType == "Struct" {
+			outPath := getOutputPath(doc, outputDir, baseName+".md")
+			// 상대 경로 계산을 위해 임시로 기준 파일 경로 제공
+			refPath := getOutputPath(doc, outputDir, "ref.md")
+			relPath, _ := filepath.Rel(filepath.Dir(refPath), outPath)
+			typeLinks[baseName] = relPath
 		}
 	}
 
-	fmt.Println("\n--- Handlers ---")
-	for _, h := range docs.Handlers {
-		fmt.Printf("  - Name: %s, Desc: %q\n", h.Name, h.Description)
-		for _, p := range h.Params {
-			fmt.Printf("    - Param: %s (%s) - %s\n", p.Name, p.Type, p.Description)
-		}
+	// 3. CSS 파일 읽기
+	cssContent, err := os.ReadFile("pkg/template/style.css")
+	if err != nil {
+		fmt.Printf("style.css 읽기 오류: %v\n", err)
+		return
 	}
+
+	// 4. 각 문서에 대해 Markdown 생성 및 파일 저장
+	for file, doc := range docs {
+		baseName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))
+		outPath := getOutputPath(doc, outputDir, baseName+".md")
+
+		// Markdown 내용 생성
+		mdContent, err := generator.Generate(doc, typeLinks, string(cssContent))
+		if err != nil {
+			fmt.Printf("문서 생성 오류 %s: %v\n", file, err)
+			continue
+		}
+
+		// 디렉토리 생성 및 파일 쓰기
+		if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+			fmt.Printf("디렉토리 생성 오류 %s: %v\n", filepath.Dir(outPath), err)
+			continue
+		}
+		if err := os.WriteFile(outPath, []byte(mdContent), 0644); err != nil {
+			fmt.Printf("파일 쓰기 오류 %s: %v\n", outPath, err)
+			continue
+		}
+		fmt.Printf("문서 생성 완료: %s\n", outPath)
+	}
+
+	fmt.Println("모든 문서 생성이 완료되었습니다.")
+}
+
+// findLuaFiles는 지정된 루트 디렉토리에서 모든 .mlua 파일을 찾습니다.
+func findLuaFiles(root string) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && strings.HasSuffix(d.Name(), ".mlua") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
+}
+
+// getOutputPath는 문서 타입에 따라 최종 파일 경로를 결정합니다.
+func getOutputPath(doc *document.Documentation, baseDir, fileName string) string {
+	docTypeDir := "etc"
+	if doc.DocType != "" {
+		docTypeDir = strings.ToLower(doc.DocType)
+	}
+	return filepath.Join(baseDir, docTypeDir, fileName)
 }
