@@ -6,19 +6,17 @@
             </th>
         </tr>
     </thead>
-    <tbody>
+    <tbody>{{- if .Description}}
         <tr>
             <td>
                 {{.Description}}
             </td>
-        </tr>
-        {{range .Params}}
+        </tr>{{- end}}{{- range .Params}}
         <tr class="param-row">
             <td>
                 <code class="param-name">{{.Name}}</code>
                 <span class="param-desc"> &nbsp;|&nbsp; {{.Desc}}</span>
             </td>
-        </tr>
-        {{end}}
+        </tr>{{- end}}
     </tbody>
 </table>

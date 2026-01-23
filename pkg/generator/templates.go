@@ -13,4 +13,5 @@ var Badges = map[string]string{
 	"ClientOnly": ` <img src="https://img.shields.io/badge/ClientOnly-87ceeb" alt="ClientOnly" style="vertical-align: middle; margin-left: 8px;">`,
 	"Server":     ` <img src="https://img.shields.io/badge/Server-ffa500" alt="Server" style="vertical-align: middle; margin-left: 8px;">`,
 	"Client":     ` <img src="https://img.shields.io/badge/Client-90ee90" alt="Client" style="vertical-align: middle; margin-left: 8px;">`,
+	"All":        ` <img src="https://img.shields.io/badge/All-d3d3d3" alt="All" style="vertical-align: middle; margin-left: 8px;">`, // All 뱃지 추가
 }
