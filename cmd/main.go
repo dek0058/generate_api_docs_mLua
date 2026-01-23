@@ -36,30 +36,22 @@ func main() {
 		docs[file] = doc
 
 		// 타입과 문서 파일 경로를 매핑. e.g., "Channel" -> "./../struct/Channel.md"
-		// DocType이 Event, Struct 등일 경우, 해당 파일이 정의하는 타입 이름은 파일 이름과 같다고 가정.
 		if doc.DocType == "Event" || doc.DocType == "Struct" {
 			outPath := getOutputPath(doc, outputDir, baseName+".md")
 			// 상대 경로 계산을 위해 임시로 기준 파일 경로 제공
 			refPath := getOutputPath(doc, outputDir, "ref.md")
 			relPath, _ := filepath.Rel(filepath.Dir(refPath), outPath)
-			typeLinks[baseName] = relPath
+			typeLinks[baseName] = strings.ReplaceAll(relPath, "\\", "/") // 경로 구분자를 URL 친화적으로 변경
 		}
 	}
 
-	// 3. CSS 파일 읽기
-	cssContent, err := os.ReadFile("pkg/template/style.css")
-	if err != nil {
-		fmt.Printf("style.css 읽기 오류: %v\n", err)
-		return
-	}
-
-	// 4. 각 문서에 대해 Markdown 생성 및 파일 저장
+	// 3. 각 문서에 대해 Markdown 생성 및 파일 저장
 	for file, doc := range docs {
 		baseName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))
 		outPath := getOutputPath(doc, outputDir, baseName+".md")
 
-		// Markdown 내용 생성
-		mdContent, err := generator.Generate(doc, typeLinks, string(cssContent))
+		// Markdown 내용 생성 (CSS 전달 필요 없음)
+		mdContent, err := generator.Generate(doc, typeLinks)
 		if err != nil {
 			fmt.Printf("문서 생성 오류 %s: %v\n", file, err)
 			continue

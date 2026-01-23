@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"generate_api_docs_mLua/pkg/document"
-	tmpl_pkg "generate_api_docs_mLua/pkg/template"
 	"html"
 	"strings"
 	"text/template"
@@ -27,12 +26,12 @@ type ParamTemplateData struct {
 	Desc string
 }
 
-func Generate(doc *document.Documentation, typeLinks TypeLinkInfo, cssContent string) (string, error) {
+func Generate(doc *document.Documentation, typeLinks TypeLinkInfo) (string, error) {
 	var mdBuilder strings.Builder
 
-	// CSS 스타일 추가
+	// 임베드된 CSS 스타일 추가
 	mdBuilder.WriteString("<style>\n")
-	mdBuilder.WriteString(cssContent)
+	mdBuilder.WriteString(StyleContent)
 	mdBuilder.WriteString("</style>\n\n")
 
 	// 문서 타입과 파일 이름 헤더 추가
@@ -81,7 +80,8 @@ func Generate(doc *document.Documentation, typeLinks TypeLinkInfo, cssContent st
 }
 
 func renderFunctionDoc(name, returnType, desc, execSpace string, params []document.ParamInfo, typeLinks TypeLinkInfo) (string, error) {
-	tmpl, err := template.New("doc").Parse(tmpl_pkg.DocumentTemplate)
+	// 임베드된 템플릿 사용
+	tmpl, err := template.New("doc").Parse(DocumentTemplate)
 	if err != nil {
 		return "", err
 	}
@@ -98,9 +98,9 @@ func renderFunctionDoc(name, returnType, desc, execSpace string, params []docume
 		})
 	}
 
-	badge, exists := tmpl_pkg.Badges[execSpace]
+	badge, exists := Badges[execSpace]
 	if !exists && execSpace != "All" {
-		badge = tmpl_pkg.Badges["Server"] // 기본값
+		badge = Badges["Server"] // 기본값
 	}
 
 	data := TemplateData{

@@ -1,4 +1,12 @@
-package template
+package generator
+
+import _ "embed"
+
+//go:embed style.css
+var StyleContent string
+
+//go:embed function_doc.tmpl
+var DocumentTemplate string
 
 var Badges = map[string]string{
 	"ServerOnly": ` <img src="https://img.shields.io/badge/ServerOnly-da70d6" alt="ServerOnly" style="vertical-align: middle; margin-left: 8px;">`,
