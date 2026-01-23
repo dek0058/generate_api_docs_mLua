@@ -4,11 +4,11 @@ MaplestoryWorlds Lua(.mlua)를 위한 API 문서 자동 생성기입니다. 소�
 
 ## ✨ 주요 기능
 
--   `.mlua` 파일의 특수 주석(`@Logic`, `@Component` 등)을 분석하여 문서 생성
--   `Properties`, `Methods`, `Handlers` 등 코드 구조를 자동으로 인식하고 분류
--   `ExecSpace`, `EventSender` 등의 속성을 기반으로 시각적인 뱃지 생성
--   타입 정보를 분석하여 관련 문서로 바로 이동할 수 있는 하이퍼링크 자동 생성
--   CSS를 포함한 독립적인 Markdown 파일을 생성하여 별도 설정 없이 깔끔한 스타일 적용
+- `.mlua` 파일의 특수 주석(`@Logic`, `@Component` 등)을 분석하여 문서 생성
+- `Properties`, `Methods`, `Handlers` 등 코드 구조를 자동으로 인식하고 분류
+- `ExecSpace`, `EventSender` 등의 속성을 기반으로 시각적인 뱃지 생성
+- 타입 정보를 분석하여 관련 문서로 바로 이동할 수 있는 하이퍼링크 자동 생성
+- CSS를 포함한 독립적인 Markdown 파일을 생성하여 별도 설정 없이 깔끔한 스타일 적용
 
 ## 🚀 시작하기
 
@@ -42,7 +42,8 @@ go run cmd/main.go
 
 ## 📝 문서 생성 예시
 
--   **입력** (`.mlua` 파일)
+- **입력** (`.mlua` 파일)
+
     ```lua
     @Logic
     ---@description "게임 로직 관리"
@@ -57,102 +58,41 @@ go run cmd/main.go
     @ExecSpace("ServerOnly")
     method void SendMessageToServer(string message)
     ```
--   **출력** (생성된 `*.md` 파일)
 
-    <details>
-    <summary><strong>결과 미리보기</strong></summary>
-
-    <style>
-    .doc-table {
-        width: 100%;
-        border-collapse: collapse;
-        border-color: #ccc;
-        border-spacing: 0;
-        border-style: solid;
-        border-width: 1px;
-        margin-bottom: 16px;
-    }
-    .doc-table th {
-        background-color: #f0f0f0;
-        border: none;
-        color: #333;
-        overflow: hidden;
-        padding: 10px 5px;
-        text-align: left;
-        vertical-align: top;
-        word-break: normal;
-    }
-    .doc-table .return-type, .doc-table .param-type, .doc-table a.param-type {
-        color: #3167ad;
-    }
-    .doc-table .function-name {
-        font-weight: bold;
-    }
-    .doc-table a.param-type {
-        text-decoration: none;
-    }
-    .doc-table a.param-type:hover {
-        text-decoration: underline;
-    }
-    .doc-table td {
-        background-color: #fff;
-        border: none;
-        color: #333;
-        overflow: hidden;
-        padding: 10px 5px;
-        text-align: left;
-        vertical-align: top;
-        word-break: normal;
-    }
-    .doc-table .param-row td {
-        background-color: #fafafa;
-        border-top: 1px solid #eee;
-        padding: 10px 5px 10px 15px;
-    }
-    .doc-table .param-name {
-        background-color: #e1e4e8;
-        padding: 2px 5px;
-        border-radius: 4px;
-        font-family: monospace;
-    }
-    .doc-table .param-desc {
-        color: #57606a;
-    }
-    </style>
+- **출력** (생성된 `*.md` 파일)
 
     ## Handlers
 
-    <table class="doc-table">
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 16px;">
         <thead>
             <tr>
-                <th>
-                    <span class="function-name">OnPlayerConnect</span>(<a href="#" class="param-type">string</a> playerName) <img src="https://img.shields.io/badge/Logic-95e1d3" alt="Logic" style="vertical-align: middle; margin-left: 8px;">
+                <th style="background-color: #f0f0f0; padding: 10px 5px; text-align: left; vertical-align: top;">
+                    <span style="font-weight: bold;">OnPlayerConnect</span>(<a href="#" style="text-decoration: none; color: #3167ad;">string</a> playerName) <img src="https://img.shields.io/badge/Logic-95e1d3" alt="Logic" style="vertical-align: middle; margin-left: 8px;">
                 </th>
             </tr>
         </thead>
         <tbody>
-            <tr><td>플레이어 접속 시 호출</td></tr>
-            <tr class="param-row"><td><strong>Logic:</strong> AuthLogic</td></tr>
-            <tr class="param-row"><td><code class="param-name">playerName</code><span class="param-desc"> &nbsp;|&nbsp; 접속한 플레이어 이름</span></td></tr>
+            <tr><td style="background-color: #fff; padding: 10px 5px; text-align: left; vertical-align: top;">플레이어 접속 시 호출</td></tr>
+            <tr><td style="background-color: #fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px; text-align: left; vertical-align: top;"><strong>Logic:</strong> AuthLogic</td></tr>
+            <tr><td style="background-color: #fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px; text-align: left; vertical-align: top;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px; font-family: monospace;">playerName</code><span style="color: #57606a;"> &nbsp;|&nbsp; 접속한 플레이어 이름</span></td></tr>
         </tbody>
     </table>
 
     ## Methods
 
-    <table class="doc-table">
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 16px;">
         <thead>
             <tr>
-                <th>
-                    <span class="return-type">void</span> <span class="function-name">SendMessageToServer</span>(<a href="#" class="param-type">string</a> message) <img src="https://img.shields.io/badge/ServerOnly-da70d6" alt="ServerOnly" style="vertical-align: middle; margin-left: 8px;">
+                <th style="background-color: #f0f0f0; padding: 10px 5px; text-align: left; vertical-align: top;">
+                    <span style="color: #3167ad;">void</span> <span style="font-weight: bold;">SendMessageToServer</span>(<a href="#" style="text-decoration: none; color: #3167ad;">string</a> message) <img src="https://img.shields.io/badge/ServerOnly-da70d6" alt="ServerOnly" style="vertical-align: middle; margin-left: 8px;">
                 </th>
             </tr>
         </thead>
         <tbody>
-            <tr><td>서버에 메시지를 전송합니다.</td></tr>
-            <tr class="param-row"><td><code class="param-name">message</code><span class="param-desc"> &nbsp;|&nbsp; 전송할 메시지</span></td></tr>
+            <tr><td style="background-color: #fff; padding: 10px 5px; text-align: left; vertical-align: top;">서버에 메시지를 전송합니다.</td></tr>
+            <tr><td style="background-color: #fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px; text-align: left; vertical-align: top;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px; font-family: monospace;">message</code><span style="color: #57606a;"> &nbsp;|&nbsp; 전송할 메시지</span></td></tr>
         </tbody>
     </table>
-    </details>
 
 ## 📂 프로젝트 구조
 
