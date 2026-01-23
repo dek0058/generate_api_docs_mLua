@@ -108,6 +108,37 @@ func TestRenderHandlerDoc(t *testing.T) {
 	}
 }
 
+func TestRenderHandlerDocWithReturnType(t *testing.T) {
+	typeLinks := make(TypeLinkInfo)
+
+	handler := document.HandlerDoc{
+		Name:            "OnPlayerUpdate",
+		Description:     "Handler with return type",
+		ExecSpace:       "ServerOnly",
+		ReturnType:      "void",
+		EventSenderType: "Entity",
+		Params: []document.ParamInfo{
+			{Name: "player", Type: "string", Description: "Player name"},
+			{Name: "health", Type: "number", Description: "Player health"},
+		},
+	}
+
+	html := renderHandlerDoc(handler, typeLinks)
+
+	// Check if return type is present
+	if !strings.Contains(html, "void") {
+		t.Error("Expected return type 'void' not found in output")
+	}
+
+	// Check if parameters are rendered
+	if !strings.Contains(html, "player") {
+		t.Error("Expected parameter 'player' not found in output")
+	}
+	if !strings.Contains(html, "health") {
+		t.Error("Expected parameter 'health' not found in output")
+	}
+}
+
 func TestRenderHandlerDocWithoutEventSender(t *testing.T) {
 	typeLinks := make(TypeLinkInfo)
 

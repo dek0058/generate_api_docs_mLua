@@ -120,3 +120,62 @@ handler TestHandler()`
 		t.Errorf("EventSenderValue = %v, want empty string", handler.EventSenderValue)
 	}
 }
+
+func TestHandlerWithReturnType(t *testing.T) {
+	input := `@Logic
+---@description "Test handler with return type"
+@EventSender("Entity", "IgnoredValue")
+handler void TestHandler()`
+
+	doc, err := Parse(input)
+	if err != nil {
+		t.Fatalf("Parse() error = %v", err)
+	}
+
+	if len(doc.Handlers) == 0 {
+		t.Fatalf("Expected at least one handler, got none")
+	}
+
+	handler := doc.Handlers[0]
+	if handler.ReturnType != "void" {
+		t.Errorf("ReturnType = %v, want void", handler.ReturnType)
+	}
+	if handler.Name != "TestHandler" {
+		t.Errorf("Name = %v, want TestHandler", handler.Name)
+	}
+}
+
+func TestHandlerWithParameters(t *testing.T) {
+	input := `@Logic
+---@description "Test handler with parameters"
+---@param string playerName Player name
+---@param number health Player health
+@EventSender("Logic", "GameLogic")
+handler void OnPlayerUpdate(string playerName, number health)`
+
+	doc, err := Parse(input)
+	if err != nil {
+		t.Fatalf("Parse() error = %v", err)
+	}
+
+	if len(doc.Handlers) == 0 {
+		t.Fatalf("Expected at least one handler, got none")
+	}
+
+	handler := doc.Handlers[0]
+	if handler.ReturnType != "void" {
+		t.Errorf("ReturnType = %v, want void", handler.ReturnType)
+	}
+	if handler.Name != "OnPlayerUpdate" {
+		t.Errorf("Name = %v, want OnPlayerUpdate", handler.Name)
+	}
+	if len(handler.Params) != 2 {
+		t.Fatalf("Expected 2 parameters, got %d", len(handler.Params))
+	}
+	if handler.Params[0].Name != "playerName" {
+		t.Errorf("Param[0].Name = %v, want playerName", handler.Params[0].Name)
+	}
+	if handler.Params[0].Type != "string" {
+		t.Errorf("Param[0].Type = %v, want string", handler.Params[0].Type)
+	}
+}

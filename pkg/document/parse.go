@@ -17,7 +17,7 @@ var (
 	// `readonly` 키워드를 선택적으로 포함하도록 수정
 	rePropertyCore = regexp.MustCompile(`(?:readonly\s+)?property\s+([a-zA-Z_<>]+)\s+([a-zA-Z0-9_]+)\s*=\s*"?([^"]+)"?`)
 	reMethodCore   = regexp.MustCompile(`method\s+([a-zA-Z_<>]+)\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)`)
-	reHandlerCore  = regexp.MustCompile(`handler\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)`)
+	reHandlerCore  = regexp.MustCompile(`handler\s+(?:([a-zA-Z_<>]+)\s+)?([a-zA-Z0-9_]+)\s*\(([^)]*)\)`) // Optional return type
 )
 
 func parseCommonAttributes(commentBlock string) (desc, execSpace string, params []ParamInfo) {
@@ -120,12 +120,19 @@ func parseBlock(comment string, code string, docs *Documentation) {
 				eventSenderValue = match[2]
 			}
 		}
+		// handlerMatch[1] is return type (optional), handlerMatch[2] is name
+		returnType := ""
+		handlerName := handlerMatch[2]
+		if handlerMatch[1] != "" {
+			returnType = handlerMatch[1]
+		}
 		docs.Handlers = append(docs.Handlers, HandlerDoc{
 			Description:      desc,
 			ExecSpace:        execSpace,
 			EventSenderType:  eventSenderType,
 			EventSenderValue: eventSenderValue,
-			Name:             handlerMatch[1],
+			Name:             handlerName,
+			ReturnType:       returnType,
 			Params:           params,
 		})
 	}

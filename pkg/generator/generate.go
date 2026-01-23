@@ -133,9 +133,17 @@ func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
 		}
 	}
 
+	// Build the header with return type if present
+	var headerContent string
+	if h.ReturnType != "" {
+		headerContent = fmt.Sprintf(`<span style="color:#3167ad">%s</span> <span style="font-weight:bold">%s</span>(%s)%s`, h.ReturnType, h.Name, paramsStrBuilder.String(), badge)
+	} else {
+		headerContent = fmt.Sprintf(`<span style="font-weight:bold">%s</span>(%s)%s`, h.Name, paramsStrBuilder.String(), badge)
+	}
+
 	return fmt.Sprintf(
-		`<table style="width:100%%;border-collapse:collapse; border-color:#ccc;border-spacing:0;border-style:solid;border-width:1px; margin-bottom: 16px;"><thead><tr><th style="background-color:#f0f0f0;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal"><span style="font-weight:bold">%s</span>(%s)%s</th></tr></thead><tbody>%s</tbody></table>`,
-		h.Name, paramsStrBuilder.String(), badge, bodyContent)
+		`<table style="width:100%%;border-collapse:collapse; border-color:#ccc;border-spacing:0;border-style:solid;border-width:1px; margin-bottom: 16px;"><thead><tr><th style="background-color:#f0f0f0;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">%s</th></tr></thead><tbody>%s</tbody></table>`,
+		headerContent, bodyContent)
 }
 
 func createLinkForType(typeName string, typeLinks TypeLinkInfo) string {
