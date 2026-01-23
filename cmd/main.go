@@ -35,8 +35,6 @@ func main() {
 
 		if doc.DocType == "Event" || doc.DocType == "Struct" {
 			outPath := getOutputPath(doc, outputDir, baseName+".md")
-			// DocType이 'logic'인 문서에서 struct 문서를 참조할 때의 상대 경로 계산
-			// 예: document/api/logic/some.md -> ../struct/MyStruct.md
 			refDir := filepath.Join(outputDir, "logic")
 			relPath, _ := filepath.Rel(refDir, outPath)
 			typeLinks[baseName] = strings.ReplaceAll(relPath, "\\", "/")
@@ -47,8 +45,18 @@ func main() {
 		baseName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))
 		outPath := getOutputPath(doc, outputDir, baseName+".md")
 
-		// Generate 함수에 문서 제목(baseName)을 전달
-		mdContent, err := generator.Generate(doc, baseName, typeLinks)
+		// 원본 mlua 파일에 대한 상대 경로 계산
+		relPathToSource, err := filepath.Rel(filepath.Dir(outPath), file)
+		if err != nil {
+			fmt.Printf("상대 경로 계산 오류: %v\n", err)
+			// 실패 시 대체 경로 사용 (루트 기준)
+			relPathToSource = file
+		}
+		// URL 경로 형식으로 변경
+		relPathToSource = strings.ReplaceAll(relPathToSource, "\\", "/")
+
+		// Generate 함수에 문서 제목과 원본 파일 링크를 전달
+		mdContent, err := generator.Generate(doc, baseName, relPathToSource, typeLinks)
 		if err != nil {
 			fmt.Printf("문서 생성 오류 %s: %v\n", file, err)
 			continue
