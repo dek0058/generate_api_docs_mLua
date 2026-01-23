@@ -53,7 +53,7 @@ func Generate(doc *document.Documentation, docTitle, sourceLink string, typeLink
 	if len(doc.Handlers) > 0 {
 		mdBuilder.WriteString("## Handlers\n\n")
 		for _, h := range doc.Handlers {
-			html := renderFunctionDoc(h.Name, "", h.Description, h.ExecSpace, h.Params, typeLinks)
+			html := renderHandlerDoc(h, typeLinks)
 			mdBuilder.WriteString(html)
 		}
 		mdBuilder.WriteString("\n")
@@ -90,6 +90,60 @@ func renderFunctionDoc(name, returnType, desc, execSpace string, params []docume
 	return fmt.Sprintf(
 		`<table style="width:100%%;border-collapse:collapse; border-color:#ccc;border-spacing:0;border-style:solid;border-width:1px; margin-bottom: 16px;"><thead><tr><th style="background-color:#f0f0f0;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal"><span style="color:#3167ad">%s</span> <span style="font-weight:bold">%s</span>(%s)%s</th></tr></thead><tbody>%s</tbody></table>`,
 		returnType, name, paramsStrBuilder.String(), badge, bodyContent)
+}
+
+// renderHandlerDoc은 핸들러 문서를 인라인 스타일 HTML로 생성합니다.
+// EventSender 배지와 추가 정보를 처리합니다.
+func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
+	var paramsStrBuilder strings.Builder
+	for i, p := range h.Params {
+		linkedType := createLinkForType(p.Type, typeLinks)
+		paramsStrBuilder.WriteString(fmt.Sprintf("%s %s", linkedType, p.Name))
+		if i < len(h.Params)-1 {
+			paramsStrBuilder.WriteString(", ")
+		}
+	}
+
+	// ExecSpace badge
+	badge, _ := Badges[h.ExecSpace]
+	
+	// EventSender badge
+	if h.EventSenderType != "" {
+		eventSenderBadge, _ := Badges[h.EventSenderType]
+		badge += eventSenderBadge
+	}
+
+	var bodyContent string
+	
+	// Description
+	if h.Description != "" {
+		bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fff;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">%s</td></tr>`, h.Description)
+	}
+	
+	// EventSender additional info for Logic and Service types
+	if (h.EventSenderType == "Logic" || h.EventSenderType == "Service") && h.EventSenderValue != "" {
+		bodyContent += fmt.Sprintf(`<tr><td style="background-color:#f9f9f9;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal"><strong>%s:</strong> %s</td></tr>`, h.EventSenderType, h.EventSenderValue)
+	}
+
+	// Parameters
+	if len(h.Params) > 0 {
+		for _, p := range h.Params {
+			linkedType := createLinkForType(p.Type, typeLinks)
+			bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px;">%s</code><span style="color: #57606a;"> &nbsp;|&nbsp; <code>%s</code> | %s</span></td></tr>`, p.Name, linkedType, p.Description)
+		}
+	}
+
+	// Build the header with return type if present
+	var headerContent string
+	if h.ReturnType != "" {
+		headerContent = fmt.Sprintf(`<span style="color:#3167ad">%s</span> <span style="font-weight:bold">%s</span>(%s)%s`, h.ReturnType, h.Name, paramsStrBuilder.String(), badge)
+	} else {
+		headerContent = fmt.Sprintf(`<span style="font-weight:bold">%s</span>(%s)%s`, h.Name, paramsStrBuilder.String(), badge)
+	}
+
+	return fmt.Sprintf(
+		`<table style="width:100%%;border-collapse:collapse; border-color:#ccc;border-spacing:0;border-style:solid;border-width:1px; margin-bottom: 16px;"><thead><tr><th style="background-color:#f0f0f0;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">%s</th></tr></thead><tbody>%s</tbody></table>`,
+		headerContent, bodyContent)
 }
 
 func createLinkForType(typeName string, typeLinks TypeLinkInfo) string {
