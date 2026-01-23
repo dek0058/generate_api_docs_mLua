@@ -8,6 +8,8 @@ import (
 )
 
 var (
+	reDocType = regexp.MustCompile(`^@(Logic|Component|Event|Struct|BTNode|Item|State)\b`)
+
 	reBlockStarter = regexp.MustCompile(`\b(property|method|handler)\b`)
 
 	reDesc        = regexp.MustCompile(`---@description\s*"([^"]+)"`)
@@ -43,9 +45,18 @@ func parseCommonAttributes(block string) (desc, execSpace string, params []Param
 
 func Parse(content string) (*Documentation, error) {
 	// 파싱의 안정성을 위해 파일 끝에 더미 키워드를 추가합니다.
-	contentStr := string(content) + "\nproperty"
+	contentStr := string(content)
 
 	docs := &Documentation{}
+
+	// 문서 타입(@Logic 등) 파싱
+	if docTypeMatch := reDocType.FindStringSubmatch(contentStr); len(docTypeMatch) > 1 {
+		docs.DocType = docTypeMatch[1]
+		// 파싱된 타입 선언부는 이후 파싱에서 제외
+		contentStr = strings.TrimSpace(strings.Replace(contentStr, docTypeMatch[0], "", 1))
+	}
+
+	contentStr += "\nproperty" // 블록 분리를 위해 더미 키워드 추가
 
 	indices := reBlockStarter.FindAllStringIndex(contentStr, -1)
 	if indices == nil {
