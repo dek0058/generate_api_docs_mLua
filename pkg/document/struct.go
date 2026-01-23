@@ -11,8 +11,10 @@ type MethodDoc struct {
 	Params                                   []ParamInfo
 }
 type HandlerDoc struct {
-	Name, EventType, EventVar, Description, ExecSpace, EventSender string
-	Params                                                         []ParamInfo // 핸들러도 파라미터를 가질 수 있으므로 추가
+	Name, EventType, EventVar, Description, ExecSpace string
+	EventSenderType                                   string // Type of EventSender (Entity, LocalPlayer, Logic, Self, Model, Service)
+	EventSenderValue                                  string // Additional value for Logic and Service types
+	Params                                            []ParamInfo // 핸들러도 파라미터를 가질 수 있으므로 추가
 }
 type Documentation struct {
 	DocType    string // 파일의 종류 (@Logic, @Component 등)

@@ -1,7 +1,6 @@
 package document
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -12,7 +11,7 @@ var (
 
 	reDesc        = regexp.MustCompile(`---@description\s*"([^"]+)"`)
 	reExecSpace   = regexp.MustCompile(`@ExecSpace\("([^"]+)"\)`)
-	reEventSender = regexp.MustCompile(`@EventSender\("([^"]+)",\s*"([^"]+)"\)`)
+	reEventSender = regexp.MustCompile(`@EventSender\("([^"]+)"(?:,\s*"([^"]+)")?\)`) // Make second parameter optional
 	reParam       = regexp.MustCompile(`---@param\s+([a-zA-Z_<>|]+)\s+([a-zA-Z0-9_]+)\s*(.*)`)
 
 	// `readonly` 키워드를 선택적으로 포함하도록 수정
@@ -57,7 +56,7 @@ func Parse(content string) (*Documentation, error) {
 		}
 
 		// 문서 주석 라인 (---@ 또는 @로 시작)을 수집
-		isCommentLine := strings.HasPrefix(trimmedLine, "---@") || strings.HasPrefix(trimmedLine, "@ExecSpace")
+		isCommentLine := strings.HasPrefix(trimmedLine, "---@") || strings.HasPrefix(trimmedLine, "@ExecSpace") || strings.HasPrefix(trimmedLine, "@EventSender")
 		if isCommentLine {
 			commentBlock = append(commentBlock, trimmedLine)
 			continue
@@ -113,16 +112,21 @@ func parseBlock(comment string, code string, docs *Documentation) {
 				execSpace = match[1]
 			}
 		}
-		eventSender := ""
-		if match := reEventSender.FindStringSubmatch(comment); len(match) > 0 {
-			eventSender = fmt.Sprintf("%s, %s", match[1], match[2])
+		eventSenderType := ""
+		eventSenderValue := ""
+		if match := reEventSender.FindStringSubmatch(comment); len(match) > 1 {
+			eventSenderType = match[1]
+			if len(match) > 2 && match[2] != "" {
+				eventSenderValue = match[2]
+			}
 		}
 		docs.Handlers = append(docs.Handlers, HandlerDoc{
-			Description: desc,
-			ExecSpace:   execSpace,
-			EventSender: eventSender,
-			Name:        handlerMatch[1],
-			Params:      params,
+			Description:      desc,
+			ExecSpace:        execSpace,
+			EventSenderType:  eventSenderType,
+			EventSenderValue: eventSenderValue,
+			Name:             handlerMatch[1],
+			Params:           params,
 		})
 	}
 }
