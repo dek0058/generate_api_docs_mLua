@@ -39,6 +39,63 @@ func parseCommonAttributes(commentBlock string) (desc, execSpace string, params 
 	return
 }
 
+// parseSignatureParams parses parameter string from function/handler signature
+// e.g., "string message, number code" -> []ParamInfo with Type and Name
+func parseSignatureParams(paramStr string) []ParamInfo {
+	paramStr = strings.TrimSpace(paramStr)
+	if paramStr == "" {
+		return nil
+	}
+
+	var params []ParamInfo
+	// Split by comma to get individual parameters
+	parts := strings.Split(paramStr, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		
+		// Split by whitespace to separate type and name
+		fields := strings.Fields(part)
+		if len(fields) >= 2 {
+			// First field is type, second is name
+			params = append(params, ParamInfo{
+				Type: fields[0],
+				Name: fields[1],
+			})
+		}
+	}
+	return params
+}
+
+// mergeParamsWithDescriptions merges parameters from signature with descriptions from ---@param
+func mergeParamsWithDescriptions(signatureParams, annotationParams []ParamInfo) []ParamInfo {
+	// If no signature params, return annotation params (old behavior)
+	if len(signatureParams) == 0 {
+		return annotationParams
+	}
+	
+	// Create a map of descriptions from annotation params
+	descMap := make(map[string]string)
+	for _, ap := range annotationParams {
+		descMap[ap.Name] = ap.Description
+	}
+	
+	// Build final params using signature (type, name) + annotation (description)
+	var result []ParamInfo
+	for _, sp := range signatureParams {
+		param := ParamInfo{
+			Type: sp.Type,
+			Name: sp.Name,
+			Description: descMap[sp.Name], // Will be empty string if not found
+		}
+		result = append(result, param)
+	}
+	
+	return result
+}
+
 func Parse(content string) (*Documentation, error) {
 	docs := &Documentation{}
 	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
@@ -98,10 +155,16 @@ func parseBlock(comment string, code string, docs *Documentation) {
 				execSpace = match[1]
 			}
 		}
+		
+		// Parse parameters from method signature
+		signatureParams := parseSignatureParams(methodMatch[3])
+		// Merge with descriptions from ---@param annotations
+		finalParams := mergeParamsWithDescriptions(signatureParams, params)
+		
 		docs.Methods = append(docs.Methods, MethodDoc{
 			Description: desc,
 			ExecSpace:   execSpace,
-			Params:      params,
+			Params:      finalParams,
 			ReturnType:  methodMatch[1],
 			Name:        methodMatch[2],
 		})
@@ -120,12 +183,18 @@ func parseBlock(comment string, code string, docs *Documentation) {
 				eventSenderValue = match[2]
 			}
 		}
-		// handlerMatch[1] is return type (optional), handlerMatch[2] is name
+		// handlerMatch[1] is return type (optional), handlerMatch[2] is name, handlerMatch[3] is params
 		returnType := ""
 		handlerName := handlerMatch[2]
 		if handlerMatch[1] != "" {
 			returnType = handlerMatch[1]
 		}
+		
+		// Parse parameters from handler signature
+		signatureParams := parseSignatureParams(handlerMatch[3])
+		// Merge with descriptions from ---@param annotations
+		finalParams := mergeParamsWithDescriptions(signatureParams, params)
+		
 		docs.Handlers = append(docs.Handlers, HandlerDoc{
 			Description:      desc,
 			ExecSpace:        execSpace,
@@ -133,7 +202,7 @@ func parseBlock(comment string, code string, docs *Documentation) {
 			EventSenderValue: eventSenderValue,
 			Name:             handlerName,
 			ReturnType:       returnType,
-			Params:           params,
+			Params:           finalParams,
 		})
 	}
 }
