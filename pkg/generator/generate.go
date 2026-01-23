@@ -1,13 +1,25 @@
 package generator
 
 import (
+	"bytes"
 	"fmt"
 	"generate_api_docs_mLua/pkg/document"
+	"html/template"
 	"strings"
 )
 
 // TypeLinkInfo는 타입 이름과 해당 타입의 문서 파일 경로를 매핑합니다.
 type TypeLinkInfo map[string]string
+
+// FuncTmplData는 function_doc.tmpl 템플릿에 전달될 데이터 구조체입니다.
+type FuncTmplData struct {
+	ReturnType        string
+	FunctionName      string
+	FunctionParamsStr template.HTML // HTML을 안전하게 렌더링하기 위해 template.HTML 사용
+	BadgeHTML         template.HTML // HTML을 안전하게 렌더링하기 위�� template.HTML 사용
+	Description       string
+	Params            []document.ParamInfo
+}
 
 func Generate(doc *document.Documentation, docTitle, sourceLink string, typeLinks TypeLinkInfo) (string, error) {
 	var mdBuilder strings.Builder
@@ -43,14 +55,19 @@ func Generate(doc *document.Documentation, docTitle, sourceLink string, typeLink
 	if len(doc.Methods) > 0 {
 		mdBuilder.WriteString("## Methods\n\n")
 		for _, m := range doc.Methods {
-			html := renderFunctionDoc(m.Name, m.ReturnType, m.Description, m.ExecSpace, m.Params, typeLinks)
+			html, err := renderFunctionDoc(m, typeLinks)
+			if err != nil {
+				return "", fmt.Errorf("method %s 렌더링 오류: %w", m.Name, err)
+			}
 			mdBuilder.WriteString(html)
 		}
-		mdBuilder.WriteString("\n\n")
 	}
 
 	// Handlers 렌더링
 	if len(doc.Handlers) > 0 {
+		if len(doc.Methods) > 0 {
+			mdBuilder.WriteString("\n\n")
+		}
 		mdBuilder.WriteString("## Handlers\n\n")
 		for _, h := range doc.Handlers {
 			html := renderHandlerDoc(h, typeLinks)
@@ -62,106 +79,102 @@ func Generate(doc *document.Documentation, docTitle, sourceLink string, typeLink
 	return mdBuilder.String(), nil
 }
 
-// renderFunctionDoc은 함수/핸들러 문서를 인라인 스타일 HTML로 생성합니다.
-func renderFunctionDoc(name, returnType, desc, execSpace string, params []document.ParamInfo, typeLinks TypeLinkInfo) string {
+// renderFunctionDoc은 메서드 문서를 function_doc.tmpl 템플릿을 사용하여 생성합니다.
+func renderFunctionDoc(m document.MethodDoc, typeLinks TypeLinkInfo) (string, error) {
 	var paramsStrBuilder strings.Builder
-	for i, p := range params {
-		linkedType := createLinkForType(p.Type, typeLinks)
-		paramsStrBuilder.WriteString(fmt.Sprintf("%s %s", linkedType, p.Name))
-		if i < len(params)-1 {
+	for i, p := range m.Params {
+		paramsStrBuilder.WriteString(fmt.Sprintf("%s %s", createLinkForType(p.Type, typeLinks), p.Name))
+		if i < len(m.Params)-1 {
 			paramsStrBuilder.WriteString(", ")
 		}
 	}
 
-	badge, _ := Badges[execSpace]
+	badge, _ := Badges[m.ExecSpace]
 
-	var bodyContent string
-	if desc != "" {
-		bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fff;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">%s</td></tr>`, desc)
+	data := FuncTmplData{
+		ReturnType:        m.ReturnType,
+		FunctionName:      m.Name,
+		FunctionParamsStr: template.HTML(paramsStrBuilder.String()),
+		BadgeHTML:         template.HTML(badge),
+		Description:       m.Description,
+		Params:            m.Params,
 	}
 
-	if len(params) > 0 {
-		for _, p := range params {
-			// Only show parameter details if there's a description
-			if p.Description != "" {
-				linkedType := createLinkForType(p.Type, typeLinks)
-				bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px;">%s</code><span style="color: #57606a;"> &nbsp;|&nbsp; <code>%s</code> | %s</span></td></tr>`, p.Name, linkedType, p.Description)
-			}
-		}
+	tmpl, err := template.New("function").Parse(DocumentTemplate)
+	if err != nil {
+		return "", err
 	}
 
-	return fmt.Sprintf(
-		`<table style="width:100%%;border-collapse:collapse; border-color:#ccc;border-spacing:0;border-style:solid;border-width:1px; margin-bottom: 16px;"><thead><tr><th style="background-color:#f0f0f0;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal"><span style="color:#3167ad">%s</span> <span style="font-weight:bold">%s</span>(%s)%s</th></tr></thead><tbody>%s</tbody></table>`,
-		returnType, name, paramsStrBuilder.String(), badge, bodyContent)
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
-// renderHandlerDoc은 핸들러 문서를 인라인 스타일 HTML로 생성합니다.
-// EventSender 배지와 추가 정보를 처리합니다.
+// renderHandlerDoc은 핸들러 문서를 function_doc.tmpl 템플릿을 사용하여 생성합니다.
 func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
 	var paramsStrBuilder strings.Builder
 	for i, p := range h.Params {
-		linkedType := createLinkForType(p.Type, typeLinks)
-		paramsStrBuilder.WriteString(fmt.Sprintf("%s %s", linkedType, p.Name))
+		paramsStrBuilder.WriteString(fmt.Sprintf("%s %s", createLinkForType(p.Type, typeLinks), p.Name))
 		if i < len(h.Params)-1 {
 			paramsStrBuilder.WriteString(", ")
 		}
 	}
 
-	// ExecSpace badge
 	badge, _ := Badges[h.ExecSpace]
-	
-	// EventSender badge
 	if h.EventSenderType != "" {
 		eventSenderBadge, _ := Badges[h.EventSenderType]
 		badge += eventSenderBadge
 	}
 
-	var bodyContent string
-	
-	// Description
+	// 핸들러는 템플릿의 파라미터 상세 설명 부분을 커스터마이징해야 할 수 있음.
+	// 여기서는 Logic/Service 추가 정보를 위해 별도 처리
+	var bodyContent strings.Builder
 	if h.Description != "" {
-		bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fff;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">%s</td></tr>`, h.Description)
-	}
-	
-	// EventSender additional info for Logic and Service types
-	if (h.EventSenderType == "Logic" || h.EventSenderType == "Service") && h.EventSenderValue != "" {
-		bodyContent += fmt.Sprintf(`<tr><td style="background-color:#f9f9f9;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal"><strong>%s:</strong> %s</td></tr>`, h.EventSenderType, h.EventSenderValue)
+		bodyContent.WriteString(fmt.Sprintf(`<tr><td>%s</td></tr>`, h.Description))
 	}
 
-	// Parameters
-	if len(h.Params) > 0 {
-		for _, p := range h.Params {
-			// Only show parameter details if there's a description
-			if p.Description != "" {
-				linkedType := createLinkForType(p.Type, typeLinks)
-				bodyContent += fmt.Sprintf(`<tr><td style="background-color:#fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px;"><code style="background-color: #e1e4e8; padding: 2px 5px; border-radius: 4px;">%s</code><span style="color: #57606a;"> &nbsp;|&nbsp; <code>%s</code> | %s</span></td></tr>`, p.Name, linkedType, p.Description)
-			}
+	// EventSender 추가 정보 (Logic, Service)
+	if (h.EventSenderType == "Logic" || h.EventSenderType == "Service") && h.EventSenderValue != "" {
+		bodyContent.WriteString(fmt.Sprintf(
+			`<tr class="param-row"><td><strong>%s:</strong> %s</td></tr>`,
+			h.EventSenderType, h.EventSenderValue,
+		))
+	}
+
+	// 파라미터 설명
+	for _, p := range h.Params {
+		if p.Description != "" {
+			bodyContent.WriteString(fmt.Sprintf(
+				`<tr class="param-row"><td><code class="param-name">%s</code><span class="param-desc"> &nbsp;|&nbsp; %s</span></td></tr>`,
+				p.Name, p.Description,
+			))
 		}
 	}
 
-	// Build the header with return type if present
-	var headerContent string
+	// 핸들러는 반환 타입이 없을 수도 있음
+	var returnTypeSpan string
 	if h.ReturnType != "" {
-		headerContent = fmt.Sprintf(`<span style="color:#3167ad">%s</span> <span style="font-weight:bold">%s</span>(%s)%s`, h.ReturnType, h.Name, paramsStrBuilder.String(), badge)
-	} else {
-		headerContent = fmt.Sprintf(`<span style="font-weight:bold">%s</span>(%s)%s`, h.Name, paramsStrBuilder.String(), badge)
+		returnTypeSpan = fmt.Sprintf(`<span class="return-type">%s</span> `, h.ReturnType)
 	}
 
-	return fmt.Sprintf(
-		`<table style="width:100%%;border-collapse:collapse; border-color:#ccc;border-spacing:0;border-style:solid;border-width:1px; margin-bottom: 16px;"><thead><tr><th style="background-color:#f0f0f0;border-color:#ccc;border-style:solid;border-width:0px;color:#333;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">%s</th></tr></thead><tbody>%s</tbody></table>`,
-		headerContent, bodyContent)
+	header := fmt.Sprintf(`%s<span class="function-name">%s</span>(%s)%s`,
+		returnTypeSpan, h.Name, paramsStrBuilder.String(), badge)
+
+	table := fmt.Sprintf(`<table class="doc-table"><thead><tr><th>%s</th></tr></thead><tbody>%s</tbody></table>`, header, bodyContent.String())
+	return table
 }
 
+// createLinkForType은 타입 이름에 적절한 HTML(링크 또는 span)을 적용합니다.
 func createLinkForType(typeName string, typeLinks TypeLinkInfo) string {
-	baseType := typeName
-	if strings.Contains(typeName, ",") {
-		parts := strings.Split(typeName, ",")
-		baseType = strings.TrimSpace(parts[len(parts)-1])
-		baseType = strings.TrimSuffix(baseType, ">")
-	}
+	baseType := strings.TrimSuffix(strings.TrimSpace(strings.Split(typeName, ",")[0]), ">")
 
 	if link, ok := typeLinks[baseType]; ok {
-		return fmt.Sprintf(`[%s](%s)`, typeName, link)
+		// 링크가 있으면 a 태그로 감싸고 class 추가
+		return fmt.Sprintf(`<a href="%s" class="param-type">%s</a>`, link, typeName)
 	}
-	return typeName
+	// 링크가 없으면 span으로 감싸서 스타일만 적용
+	return fmt.Sprintf(`<span class="param-type">%s</span>`, typeName)
 }

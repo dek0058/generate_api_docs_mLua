@@ -11,12 +11,12 @@
             <td>
                 {{.Description}}
             </td>
-        </tr>{{- end}}{{- range .Params}}
+        </tr>{{- end}}{{- range .Params}}{{- if .Description}}
         <tr class="param-row">
             <td>
                 <code class="param-name">{{.Name}}</code>
-                <span class="param-desc"> &nbsp;|&nbsp; {{.Desc}}</span>
+                <span class="param-desc"> &nbsp;|&nbsp; {{.Description}}</span>
             </td>
-        </tr>{{- end}}
+        </tr>{{- end}}{{- end}}
     </tbody>
 </table>

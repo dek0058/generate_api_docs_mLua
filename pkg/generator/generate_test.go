@@ -137,7 +137,7 @@ func TestRenderHandlerDocWithReturnType(t *testing.T) {
 	if !strings.Contains(html, "number health") {
 		t.Error("Expected parameter 'number health' not found in title")
 	}
-	
+
 	// Check if parameters are rendered in the body
 	if !strings.Contains(html, "player") {
 		t.Error("Expected parameter 'player' not found in output")

@@ -27,6 +27,21 @@
     font-weight: bold;
 }
 
+/* 파라미터 타입을 위한 스타일 */
+.doc-table .param-type {
+    color: #3167ad;
+}
+
+/* 파라미터 타입 링크 스타일 */
+.doc-table a.param-type {
+    text-decoration: none;
+    color: #3167ad;
+}
+.doc-table a.param-type:hover {
+    text-decoration: underline;
+}
+
+
 .doc-table td {
     background-color: #fff;
     border: none;
@@ -41,7 +56,7 @@
 .doc-table .param-row td {
     background-color: #fafafa;
     border-top: 1px solid #eee;
-    padding-left: 15px;
+    padding: 10px 5px 10px 15px;
 }
 
 .doc-table .param-name {
