@@ -66,14 +66,14 @@ go run cmd/main.go
     # GameLogic
 
     게임을 관리하는 로직 입니다.
-    
+
     ## Handlers
 
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 16px;">
         <thead>
             <tr>
                 <th style="background-color: #f0f0f0; padding: 10px 5px; text-align: left; vertical-align: top;">
-                    <span style="font-weight: bold;">OnPlayerConnect</span>(<a href="#" style="text-decoration: none; color: #3167ad;">string</a> playerName) <img src="https://img.shields.io/badge/Logic-95e1d3" alt="Logic" style="vertical-align: middle; margin-left: 8px;">
+                    <span style="color: #3167ad;">handler</span> <span style="font-weight: bold;">OnPlayerConnect</span>(<a href="#" style="text-decoration: none; color: #3167ad;">string</a> playerName) <img src="https://img.shields.io/badge/Logic-95e1d3" alt="Logic" style="vertical-align: middle; margin-left: 8px;">
                 </th>
             </tr>
         </thead>

@@ -186,7 +186,7 @@ func parseBlock(comment string, code string, docs *Documentation) {
 				eventSenderValue = match[2]
 			}
 		}
-		returnType := ""
+		returnType := "handler"
 		handlerName := handlerMatch[2]
 		if handlerMatch[1] != "" {
 			returnType = handlerMatch[1]
