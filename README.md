@@ -17,18 +17,20 @@ MaplestoryWorlds Lua(.mlua)를 위한 API 문서 자동 생성기입니다. 소�
 문서를 생성할 `.mlua` 파일에 아래 형식에 맞춰 주석을 작성합니다.
 
 ```lua
-@Logic
----@description "플레이어의 상태를 관리하는 로직"
+    ---@description "게임을 관리하는 로직 입니다."
+    @Logic
+    script GameLogic extends Logic
 
----@description "플레이어가 스폰될 때 호출됩니다."
----@param string playerName "플레이어 이름"
----@param number playerHealth "초기 체력"
-@EventSender("Logic", "GameManager")
-handler OnPlayerSpawn(string playerName, number playerHealth)
+        ---@description "플레이어 접속 시 호출"
+        ---@param playerName string "접속한 플레이어 이름"
+        @EventSender("Logic", "AuthLogic")
+        handler OnPlayerConnect(string playerName)
 
----@description "플레이어에게 데미지를 입힙니다."
----@param number damage "입힐 데미지 양"
-method void TakeDamage(number damage)
+        ---@description "서버에 메시지를 전송합니다."
+        ---@param message string "전송할 메시지"
+        @ExecSpace("ServerOnly")
+        method void SendMessageToServer(string message)
+    end
 
 ```
 
@@ -50,12 +52,12 @@ go run cmd/main.go
     script GameLogic extends Logic
 
         ---@description "플레이어 접속 시 호출"
-        ---@param string playerName "접속한 플레이어 이름"
+        ---@param playerName string "접속한 플레이어 이름"
         @EventSender("Logic", "AuthLogic")
         handler OnPlayerConnect(string playerName)
 
         ---@description "서버에 메시지를 전송합니다."
-        ---@param string message "전송할 메시지"
+        ---@param message string "전송할 메시지"
         @ExecSpace("ServerOnly")
         method void SendMessageToServer(string message)
     end

@@ -56,8 +56,8 @@ func parseSignatureParams(paramStr string) []ParamInfo {
 		fields := strings.Fields(part)
 		if len(fields) >= 2 {
 			params = append(params, ParamInfo{
-				Type: fields[0],
-				Name: fields[1],
+				Type: fields[1],
+				Name: fields[0],
 			})
 		}
 	}
@@ -81,6 +81,10 @@ func mergeParamsWithDescriptions(signatureParams, annotationParams []ParamInfo) 
 			Name:        sp.Name,
 			Description: descMap[sp.Name],
 		}
+
+		// Description의 앞뒤에 "가 붙어있을 경우에만 제거
+		param.Description = strings.Trim(param.Description, `"`)
+
 		result = append(result, param)
 	}
 
