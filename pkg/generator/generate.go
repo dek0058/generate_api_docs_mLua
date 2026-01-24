@@ -27,6 +27,10 @@ func Generate(doc *document.Documentation, docTitle, sourceLink string, typeLink
 	// 문서 제목에 원본 파일 링크 추가
 	mdBuilder.WriteString(fmt.Sprintf("# [%s](%s)\n\n", docTitle, sourceLink))
 
+	if doc.Description != "" {
+		mdBuilder.WriteString(fmt.Sprintf("%s\n\n", doc.Description))
+	}
+
 	// Properties 렌더링
 	if len(doc.Properties) > 0 {
 		mdBuilder.WriteString("## Properties\n\n")

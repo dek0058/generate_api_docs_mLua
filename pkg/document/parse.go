@@ -11,13 +11,13 @@ var (
 
 	reDesc        = regexp.MustCompile(`---@description\s*"([^"]+)"`)
 	reExecSpace   = regexp.MustCompile(`@ExecSpace\("([^"]+)"\)`)
-	reEventSender = regexp.MustCompile(`@EventSender\("([^"]+)"(?:,\s*"([^"]+)")?\)`) // Make second parameter optional
+	reEventSender = regexp.MustCompile(`@EventSender\("([^"]+)"(?:,\s*"([^"]+)")?\)`)
 	reParam       = regexp.MustCompile(`---@param\s+([a-zA-Z_<>|]+)\s+([a-zA-Z0-9_]+)\s*(.*)`)
 
 	// `readonly` 키워드를 선택적으로 포함하도록 수정
 	rePropertyCore = regexp.MustCompile(`(?:readonly\s+)?property\s+([a-zA-Z_<>]+)\s+([a-zA-Z0-9_]+)\s*=\s*"?([^"]+)"?`)
 	reMethodCore   = regexp.MustCompile(`method\s+([a-zA-Z_<>]+)\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)`)
-	reHandlerCore  = regexp.MustCompile(`handler\s+(?:([a-zA-Z_<>]+)\s+)?([a-zA-Z0-9_]+)\s*\(([^)]*)\)`) // Optional return type
+	reHandlerCore  = regexp.MustCompile(`handler\s+(?:([a-zA-Z_<>]+)\s+)?([a-zA-Z0-9_]+)\s*\(([^)]*)\)`)
 )
 
 func parseCommonAttributes(commentBlock string) (desc, execSpace string, params []ParamInfo) {
@@ -39,8 +39,6 @@ func parseCommonAttributes(commentBlock string) (desc, execSpace string, params 
 	return
 }
 
-// parseSignatureParams parses parameter string from function/handler signature
-// e.g., "string message, number code" -> []ParamInfo with Type and Name
 func parseSignatureParams(paramStr string) []ParamInfo {
 	paramStr = strings.TrimSpace(paramStr)
 	if paramStr == "" {
@@ -48,19 +46,15 @@ func parseSignatureParams(paramStr string) []ParamInfo {
 	}
 
 	var params []ParamInfo
-	// Split by comma to get individual parameters
 	parts := strings.Split(paramStr, ",")
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue
 		}
-		
-		// Split by whitespace to separate type and name
-		// Expected format: "type name" (e.g., "string playerName")
+
 		fields := strings.Fields(part)
 		if len(fields) >= 2 {
-			// First field is type, second is name (ignore any additional fields)
 			params = append(params, ParamInfo{
 				Type: fields[0],
 				Name: fields[1],
@@ -70,30 +64,26 @@ func parseSignatureParams(paramStr string) []ParamInfo {
 	return params
 }
 
-// mergeParamsWithDescriptions merges parameters from signature with descriptions from ---@param
 func mergeParamsWithDescriptions(signatureParams, annotationParams []ParamInfo) []ParamInfo {
-	// If no signature params, return annotation params (old behavior)
 	if len(signatureParams) == 0 {
 		return annotationParams
 	}
-	
-	// Create a map of descriptions from annotation params
+
 	descMap := make(map[string]string)
 	for _, ap := range annotationParams {
 		descMap[ap.Name] = ap.Description
 	}
-	
-	// Build final params using signature (type, name) + annotation (description)
+
 	var result []ParamInfo
 	for _, sp := range signatureParams {
 		param := ParamInfo{
-			Type: sp.Type,
-			Name: sp.Name,
-			Description: descMap[sp.Name], // Will be empty string if not found
+			Type:        sp.Type,
+			Name:        sp.Name,
+			Description: descMap[sp.Name],
 		}
 		result = append(result, param)
 	}
-	
+
 	return result
 }
 
@@ -106,9 +96,23 @@ func Parse(content string) (*Documentation, error) {
 	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
 
+		isDocCommentLine := strings.HasPrefix(trimmedLine, "---@")
+		if isDocCommentLine {
+			commentBlock = append(commentBlock, trimmedLine)
+			continue
+		}
+
 		if docs.DocType == "" {
 			if match := reDocType.FindStringSubmatch(trimmedLine); len(match) > 1 {
 				docs.DocType = match[1]
+
+				if len(commentBlock) > 0 {
+					commentStr := strings.Join(commentBlock, "\n")
+					if descMatch := reDesc.FindStringSubmatch(commentStr); len(descMatch) > 1 {
+						docs.Description = descMatch[1]
+					}
+					commentBlock = nil
+				}
 				continue
 			}
 		}
@@ -156,12 +160,10 @@ func parseBlock(comment string, code string, docs *Documentation) {
 				execSpace = match[1]
 			}
 		}
-		
-		// Parse parameters from method signature
+
 		signatureParams := parseSignatureParams(methodMatch[3])
-		// Merge with descriptions from ---@param annotations
 		finalParams := mergeParamsWithDescriptions(signatureParams, params)
-		
+
 		docs.Methods = append(docs.Methods, MethodDoc{
 			Description: desc,
 			ExecSpace:   execSpace,
@@ -184,18 +186,15 @@ func parseBlock(comment string, code string, docs *Documentation) {
 				eventSenderValue = match[2]
 			}
 		}
-		// handlerMatch[1] is return type (optional), handlerMatch[2] is name, handlerMatch[3] is params
 		returnType := ""
 		handlerName := handlerMatch[2]
 		if handlerMatch[1] != "" {
 			returnType = handlerMatch[1]
 		}
-		
-		// Parse parameters from handler signature
+
 		signatureParams := parseSignatureParams(handlerMatch[3])
-		// Merge with descriptions from ---@param annotations
 		finalParams := mergeParamsWithDescriptions(signatureParams, params)
-		
+
 		docs.Handlers = append(docs.Handlers, HandlerDoc{
 			Description:      desc,
 			ExecSpace:        execSpace,

@@ -45,22 +45,28 @@ go run cmd/main.go
 - **입력** (`.mlua` 파일)
 
     ```lua
+    ---@description "게임을 관리하는 로직 입니다."
     @Logic
-    ---@description "게임 로직 관리"
+    script GameLogic extends Logic
 
-    ---@description "플레이어 접속 시 호출"
-    ---@param string playerName "접속한 플레이어 이름"
-    @EventSender("Logic", "AuthLogic")
-    handler OnPlayerConnect(string playerName)
+        ---@description "플레이어 접속 시 호출"
+        ---@param string playerName "접속한 플레이어 이름"
+        @EventSender("Logic", "AuthLogic")
+        handler OnPlayerConnect(string playerName)
 
-    ---@description "서버에 메시지를 전송합니다."
-    ---@param string message "전송할 메시지"
-    @ExecSpace("ServerOnly")
-    method void SendMessageToServer(string message)
+        ---@description "서버에 메시지를 전송합니다."
+        ---@param string message "전송할 메시지"
+        @ExecSpace("ServerOnly")
+        method void SendMessageToServer(string message)
+    end
     ```
 
 - **출력** (생성된 `*.md` 파일)
 
+    # GameLogic
+
+    게임을 관리하는 로직 입니다.
+    
     ## Handlers
 
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 16px;">
