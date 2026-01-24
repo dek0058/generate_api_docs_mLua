@@ -31,8 +31,8 @@ func parseCommonAttributes(commentBlock string) (desc, execSpace string, params 
 	paramMatches := reParam.FindAllStringSubmatch(commentBlock, -1)
 	for _, pMatch := range paramMatches {
 		params = append(params, ParamInfo{
-			Type:        pMatch[1],
-			Name:        pMatch[2],
+			Type:        pMatch[2],
+			Name:        pMatch[1],
 			Description: strings.TrimSpace(pMatch[3]),
 		})
 	}
@@ -56,8 +56,8 @@ func parseSignatureParams(paramStr string) []ParamInfo {
 		fields := strings.Fields(part)
 		if len(fields) >= 2 {
 			params = append(params, ParamInfo{
-				Type: fields[1],
-				Name: fields[0],
+				Type: fields[0],
+				Name: fields[1],
 			})
 		}
 	}
