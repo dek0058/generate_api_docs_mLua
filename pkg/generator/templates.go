@@ -10,14 +10,12 @@ var DocumentTemplate string
 
 // GitHub Markdown용 inline style 템플릿
 var DocumentTemplateInline = `<table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 16px;">
-    <thead>
+    <tbody>
         <tr>
-            <th style="background-color: #f0f0f0; padding: 10px 5px; text-align: left; vertical-align: top;">
+            <td style="background-color: #f0f0f0; padding: 10px 5px; text-align: left; vertical-align: top;">
                 <span style="color: #3167ad;">{{.ReturnType}}</span> <span style="font-weight: bold;">{{.FunctionName}}</span>({{.FunctionParamsStr}}){{.BadgeHTML}}
-            </th>
-        </tr>
-    </thead>
-    <tbody>{{- if .Description}}
+            </td>
+        </tr>{{- if .Description}}
         <tr>
             <td style="background-color: #fff; padding: 10px 5px; text-align: left; vertical-align: top;">
                 {{.Description}}

@@ -133,7 +133,6 @@ func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
 		badge += eventSenderBadge
 	}
 
-	// 핸들러는 반환 타입이 없을 수도 있음
 	var returnTypeSpan string
 	if h.ReturnType != "" {
 		returnTypeSpan = fmt.Sprintf(`<span style="color: #3167ad;">%s</span> `, h.ReturnType)
@@ -153,7 +152,6 @@ func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
 		))
 	}
 
-	// EventSender 추가 정보 (Logic, Service)
 	if (h.EventSenderType == "Logic" || h.EventSenderType == "Service") && h.EventSenderValue != "" {
 		bodyContent.WriteString(fmt.Sprintf(
 			`<tr><td style="background-color: #fafafa; border-top: 1px solid #eee; padding: 10px 5px 10px 15px; text-align: left; vertical-align: top;"><strong>%s:</strong> %s</td></tr>`,
@@ -161,7 +159,6 @@ func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
 		))
 	}
 
-	// 파라미터 설명
 	for _, p := range h.Params {
 		if p.Description != "" {
 			bodyContent.WriteString(fmt.Sprintf(
@@ -171,9 +168,17 @@ func renderHandlerDoc(h document.HandlerDoc, typeLinks TypeLinkInfo) string {
 		}
 	}
 
-	// 완전한 테이블 생성
 	table := fmt.Sprintf(
-		`<table style="width: 100%%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 16px;"><thead><tr><th style="background-color: #f0f0f0; padding: 10px 5px; text-align: left; vertical-align: top;">%s</th></tr></thead><tbody>%s</tbody></table>`,
+		`<table style="width: 100%%; border-collapse: collapse; border: 1px solid #ccc; margin-bottom: 16px;">
+    <tbody>
+        <tr>
+            <td style="background-color: #f0f0f0; padding: 10px 5px; text-align: left; vertical-align: top;">
+                %s
+            </td>
+        </tr>
+        %s
+    </tbody>
+</table>`,
 		header, bodyContent.String(),
 	)
 
@@ -184,7 +189,7 @@ func createLinkForType(typeName string, typeLinks TypeLinkInfo) string {
 	baseType := strings.TrimSuffix(strings.TrimSpace(strings.Split(typeName, ",")[0]), ">")
 
 	if link, ok := typeLinks[baseType]; ok {
-		// ��크가 있으면 a 태그로 감싸고 inline style 추가
+		// 링크가 있으면 a 태그로 감싸고 inline style 추가
 		return fmt.Sprintf(`<a href="%s" style="text-decoration: none; color: #3167ad;">%s</a>`, link, typeName)
 	}
 	// 링크가 없으면 span으로 감싸서 스타일만 적용
